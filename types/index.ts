@@ -10,6 +10,7 @@ export interface Expense {
   id: string;
   tourId: string;
   title: string;
+  details?: string;
   amount: number;
   date: string;
   day: number;

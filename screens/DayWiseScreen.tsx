@@ -54,6 +54,9 @@ export const DayWiseScreen = ({ navigation }: any) => {
                   <Text style={styles.expenseCategory}>
                     {expense.category} • Paid by {Object.keys(expense.paidBy).map(id => currentTour.contributors.find(c => c.id === id)?.name).filter(Boolean).join(', ')}
                   </Text>
+                  {expense.details ? (
+                    <Text style={styles.expenseDetails}>{expense.details}</Text>
+                  ) : null}
                 </View>
                 <Text style={styles.expenseAmount}>{formatCurrency(expense.amount)}</Text>
               </View>
@@ -126,6 +129,12 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     fontSize: 12,
     marginTop: 2,
+  },
+  expenseDetails: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   expenseAmount: {
     color: COLORS.danger,

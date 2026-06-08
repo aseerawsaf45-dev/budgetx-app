@@ -13,12 +13,13 @@ export const AddExpenseScreen = ({ navigation }: any) => {
   const currentTour = tours.find(t => t.id === currentTourId);
 
   const [title, setTitle] = useState('');
+  const [details, setDetails] = useState('');
+  const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState<Record<string, string>>({});
   const [day, setDay] = useState('1');
   const [category, setCategory] = useState<Expense['category']>('Food');
   
-  const totalAmount = Object.values(paidBy).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-  
+
   // By default, split equal among all
   const [splitAmong, setSplitAmong] = useState<string[]>(
     currentTour?.contributors.map(c => c.id) || []
@@ -33,21 +34,33 @@ export const AddExpenseScreen = ({ navigation }: any) => {
   }
 
   const handleSave = () => {
+    const parsedAmount = parseFloat(amount) || 0;
     const parsedPaidBy: Record<string, number> = {};
+    let sumPaid = 0;
+    
     Object.entries(paidBy).forEach(([id, val]) => {
       const num = parseFloat(val);
-      if (num > 0) parsedPaidBy[id] = num;
+      if (num > 0) {
+        parsedPaidBy[id] = num;
+        sumPaid += num;
+      }
     });
 
-    if (!title || totalAmount <= 0 || Object.keys(parsedPaidBy).length === 0 || splitAmong.length === 0) {
+    if (!title || parsedAmount <= 0 || Object.keys(parsedPaidBy).length === 0 || splitAmong.length === 0) {
       alert('Please fill out all fields and ensure contributors are added to the tour.');
+      return;
+    }
+
+    if (Math.abs(sumPaid - parsedAmount) > 0.01) {
+      alert('The sum of individual payments must equal the total amount.');
       return;
     }
 
     addExpense(currentTour.id, {
       tourId: currentTour.id,
       title,
-      amount: totalAmount,
+      details: details.trim() || undefined,
+      amount: parsedAmount,
       date: new Date().toISOString(),
       day: parseInt(day) || 1,
       category,
@@ -97,10 +110,27 @@ export const AddExpenseScreen = ({ navigation }: any) => {
       </View>
 
       <View style={styles.inputContainer}>
+        <Text style={styles.label}>Expense Details / Description</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. Bus from Dhaka to Sylhet"
+          placeholderTextColor={COLORS.textMuted}
+          value={details}
+          onChangeText={setDetails}
+          multiline
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
         <Text style={styles.label}>Total Amount (৳)</Text>
-        <Text style={[styles.input, { color: COLORS.textMuted, backgroundColor: COLORS.surfaceLight }]}>
-          {totalAmount}
-        </Text>
+        <TextInput
+          style={styles.input}
+          placeholder="0"
+          placeholderTextColor={COLORS.textMuted}
+          keyboardType="numeric"
+          value={amount}
+          onChangeText={setAmount}
+        />
       </View>
 
       <View style={styles.inputContainer}>

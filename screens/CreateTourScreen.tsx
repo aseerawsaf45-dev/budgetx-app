@@ -10,6 +10,7 @@ export const CreateTourScreen = ({ navigation }: any) => {
   const { addTour } = useStore();
   const [destination, setDestination] = useState('');
   const [participants, setParticipants] = useState('');
+  const [days, setDays] = useState('1');
 
   const handleCreate = () => {
     if (!destination) return;
@@ -22,7 +23,7 @@ export const CreateTourScreen = ({ navigation }: any) => {
       destination,
       startDate: new Date().toISOString(),
       endDate: new Date().toISOString(),
-      days: 1,
+      days: parseInt(days) || 1,
       estimatedParticipants: contributors.length || 1,
       totalBudget: 0,
       contributors,
@@ -61,6 +62,18 @@ export const CreateTourScreen = ({ navigation }: any) => {
           placeholderTextColor={COLORS.textMuted}
           value={participants}
           onChangeText={setParticipants}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>No. of Days</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="1"
+          placeholderTextColor={COLORS.textMuted}
+          keyboardType="numeric"
+          value={days}
+          onChangeText={setDays}
         />
       </View>
 
