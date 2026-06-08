@@ -7,8 +7,9 @@ import { DayWiseScreen } from '../screens/DayWiseScreen';
 import { SettlementScreen } from '../screens/SettlementScreen';
 import { AddExpenseScreen } from '../screens/AddExpenseScreen';
 import { ContributorsScreen } from '../screens/ContributorsScreen';
+import { HistoryScreen } from '../screens/HistoryScreen';
 import { COLORS } from '../constants/theme';
-import { LayoutDashboard, PlusCircle, CalendarDays, Wallet } from 'lucide-react-native';
+import { LayoutDashboard, PlusCircle, CalendarDays, Wallet, History } from 'lucide-react-native';
 import { Text } from 'react-native';
 
 const Tab = createBottomTabNavigator();
@@ -56,6 +57,13 @@ const TabNavigator = () => {
         component={SettlementScreen} 
         options={{
           tabBarIcon: ({ color }) => <Wallet color={color} size={24} />,
+        }}
+      />
+      <Tab.Screen 
+        name="History" 
+        component={HistoryScreen} 
+        options={{
+          tabBarIcon: ({ color }) => <History color={color} size={24} />,
         }}
       />
     </Tab.Navigator>

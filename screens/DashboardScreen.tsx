@@ -1,15 +1,28 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
 import { formatCurrency } from '../utils/currency';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Plus } from 'lucide-react-native';
+import { Plus, Trash2 } from 'lucide-react-native';
 import { Button } from '../components/Button';
 
+
 export const DashboardScreen = ({ navigation }: any) => {
-  const { tours, currentTourId, setCurrentTourId } = useStore();
+  const { tours, currentTourId, setCurrentTourId, deleteTour } = useStore();
   const currentTour = tours.find(t => t.id === currentTourId);
+
+  const handleDelete = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to delete this tour?')) {
+        deleteTour(currentTour!.id);
+      }
+    } else {
+      // Need to import Alert from react-native if not using web fallback
+      // But we can just use window.confirm as a simple universal fallback for now or add Alert.
+      // Let's add Alert to the top level import later, actually window.confirm works fine on web and Alert is better on mobile.
+    }
+  };
 
   if (!currentTour) {
     return (
@@ -33,6 +46,24 @@ export const DashboardScreen = ({ navigation }: any) => {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.headerContainer}>
         <Text style={styles.header}>{currentTour.name}</Text>
+        <TouchableOpacity 
+          onPress={() => {
+            if (Platform.OS === 'web') {
+              if (window.confirm('Are you sure you want to delete this tour?')) {
+                deleteTour(currentTour.id);
+              }
+            } else {
+              const { Alert } = require('react-native');
+              Alert.alert('Delete Tour', 'Are you sure you want to delete this tour?', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteTour(currentTour.id) }
+              ]);
+            }
+          }}
+          style={{ padding: SPACING.sm }}
+        >
+          <Trash2 color={COLORS.danger} size={24} />
+        </TouchableOpacity>
       </View>
 
       {tours.length > 0 && (
