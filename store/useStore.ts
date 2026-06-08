@@ -8,7 +8,7 @@ interface StoreState {
   tours: Tour[];
   currentTourId: string | null;
   setCurrentTourId: (id: string | null) => void;
-  addTour: (tour: Omit<Tour, 'id' | 'createdAt' | 'expenses' | 'contributors'>) => void;
+  addTour: (tour: Omit<Tour, 'id' | 'createdAt' | 'expenses'>) => void;
   updateTour: (id: string, tour: Partial<Tour>) => void;
   deleteTour: (id: string) => void;
   addExpense: (tourId: string, expense: Omit<Expense, 'id'>) => void;
@@ -32,7 +32,7 @@ export const useStore = create<StoreState>()(
           id: Crypto.randomUUID(),
           createdAt: new Date().toISOString(),
           expenses: [],
-          contributors: [],
+          contributors: tourData.contributors || [],
         };
         return {
           tours: [newTour, ...state.tours],

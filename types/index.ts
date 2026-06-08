@@ -14,7 +14,7 @@ export interface Expense {
   date: string;
   day: number;
   category: 'Transport' | 'Hotel' | 'Food' | 'Snacks' | 'Tickets' | 'Guide' | 'Emergency' | 'Miscellaneous';
-  paidBy: string; // Contributor ID
+  paidBy: Record<string, number>; // Contributor ID -> Amount Paid
   splitAmong: string[]; // Contributor IDs
   splitType: 'EQUAL' | 'CUSTOM';
   customSplit?: Record<string, number>; // Contributor ID -> Amount

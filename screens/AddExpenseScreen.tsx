@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
 import { Button } from '../components/Button';
@@ -12,10 +13,11 @@ export const AddExpenseScreen = ({ navigation }: any) => {
   const currentTour = tours.find(t => t.id === currentTourId);
 
   const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
+  const [paidBy, setPaidBy] = useState<Record<string, string>>({});
   const [day, setDay] = useState('1');
   const [category, setCategory] = useState<Expense['category']>('Food');
-  const [paidBy, setPaidBy] = useState<string>('');
+  
+  const totalAmount = Object.values(paidBy).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
   
   // By default, split equal among all
   const [splitAmong, setSplitAmong] = useState<string[]>(
@@ -31,7 +33,13 @@ export const AddExpenseScreen = ({ navigation }: any) => {
   }
 
   const handleSave = () => {
-    if (!title || !amount || !paidBy || splitAmong.length === 0) {
+    const parsedPaidBy: Record<string, number> = {};
+    Object.entries(paidBy).forEach(([id, val]) => {
+      const num = parseFloat(val);
+      if (num > 0) parsedPaidBy[id] = num;
+    });
+
+    if (!title || totalAmount <= 0 || Object.keys(parsedPaidBy).length === 0 || splitAmong.length === 0) {
       alert('Please fill out all fields and ensure contributors are added to the tour.');
       return;
     }
@@ -39,11 +47,11 @@ export const AddExpenseScreen = ({ navigation }: any) => {
     addExpense(currentTour.id, {
       tourId: currentTour.id,
       title,
-      amount: parseFloat(amount) || 0,
+      amount: totalAmount,
       date: new Date().toISOString(),
       day: parseInt(day) || 1,
       category,
-      paidBy,
+      paidBy: parsedPaidBy,
       splitAmong,
       splitType: 'EQUAL'
     });
@@ -61,7 +69,14 @@ export const AddExpenseScreen = ({ navigation }: any) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Add Expense</Text>
+      <View style={styles.header}>
+        {navigation.canGoBack() && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <ArrowLeft color={COLORS.text} size={24} />
+          </TouchableOpacity>
+        )}
+        <Text style={styles.title}>Add Expense</Text>
+      </View>
 
       {currentTour.contributors.length === 0 && (
         <View style={styles.warningBox}>
@@ -82,15 +97,10 @@ export const AddExpenseScreen = ({ navigation }: any) => {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Amount (৳)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="0"
-          placeholderTextColor={COLORS.textMuted}
-          keyboardType="numeric"
-          value={amount}
-          onChangeText={setAmount}
-        />
+        <Text style={styles.label}>Total Amount (৳)</Text>
+        <Text style={[styles.input, { color: COLORS.textMuted, backgroundColor: COLORS.surfaceLight }]}>
+          {totalAmount}
+        </Text>
       </View>
 
       <View style={styles.inputContainer}>
@@ -122,17 +132,19 @@ export const AddExpenseScreen = ({ navigation }: any) => {
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Paid By</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillContainer}>
-          {currentTour.contributors.map(c => (
-            <TouchableOpacity 
-              key={c.id} 
-              style={[styles.pill, paidBy === c.id && styles.pillActive]}
-              onPress={() => setPaidBy(c.id)}
-            >
-              <Text style={[styles.pillText, paidBy === c.id && styles.pillTextActive]}>{c.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {currentTour.contributors.map(c => (
+          <View key={c.id} style={{flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm}}>
+            <Text style={{flex: 1, color: COLORS.text, fontSize: 16}}>{c.name}</Text>
+            <TextInput
+              style={[styles.input, {flex: 1, paddingVertical: SPACING.sm}]}
+              placeholder="0"
+              placeholderTextColor={COLORS.textMuted}
+              keyboardType="numeric"
+              value={paidBy[c.id] || ''}
+              onChangeText={(val) => setPaidBy(prev => ({...prev, [c.id]: val}))}
+            />
+          </View>
+        ))}
       </View>
 
       <View style={styles.inputContainer}>
@@ -163,11 +175,18 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING.lg,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.xl,
+  },
+  backBtn: {
+    marginRight: SPACING.md,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: SPACING.xl,
   },
   inputContainer: {
     marginBottom: SPACING.lg,

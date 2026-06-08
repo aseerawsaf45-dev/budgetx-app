@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import * as Crypto from 'expo-crypto';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
 import { Button } from '../components/Button';
+import { ArrowLeft } from 'lucide-react-native';
 
 export const CreateTourScreen = ({ navigation }: any) => {
   const { addTour } = useStore();
   const [destination, setDestination] = useState('');
-  const [participants, setParticipants] = useState('1');
+  const [participants, setParticipants] = useState('');
 
   const handleCreate = () => {
     if (!destination) return;
+    
+    const names = participants.split(',').map(n => n.trim()).filter(Boolean);
+    const contributors = names.map(name => ({ id: Crypto.randomUUID(), name }));
 
     addTour({
       name: destination + ' Tour',
@@ -18,8 +23,9 @@ export const CreateTourScreen = ({ navigation }: any) => {
       startDate: new Date().toISOString(),
       endDate: new Date().toISOString(),
       days: 1,
-      estimatedParticipants: parseInt(participants) || 1,
+      estimatedParticipants: contributors.length || 1,
       totalBudget: 0,
+      contributors,
     });
 
     navigation.navigate('MainTabs', { screen: 'Home' });
@@ -27,7 +33,14 @@ export const CreateTourScreen = ({ navigation }: any) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Create New Tour</Text>
+      <View style={styles.header}>
+        {navigation.canGoBack() && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <ArrowLeft color={COLORS.text} size={24} />
+          </TouchableOpacity>
+        )}
+        <Text style={styles.title}>Create New Tour</Text>
+      </View>
       
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Destination</Text>
@@ -41,12 +54,11 @@ export const CreateTourScreen = ({ navigation }: any) => {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Estimated Participants</Text>
+        <Text style={styles.label}>Participant Names (comma separated)</Text>
         <TextInput
           style={styles.input}
-          placeholder="1"
+          placeholder="e.g. Alice, Bob, Charlie"
           placeholderTextColor={COLORS.textMuted}
-          keyboardType="numeric"
           value={participants}
           onChangeText={setParticipants}
         />
@@ -65,11 +77,18 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING.lg,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.xl,
+  },
+  backBtn: {
+    marginRight: SPACING.md,
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: SPACING.xl,
   },
   inputContainer: {
     marginBottom: SPACING.lg,

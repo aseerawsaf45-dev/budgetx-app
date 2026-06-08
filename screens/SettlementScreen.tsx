@@ -30,10 +30,12 @@ export const SettlementScreen = ({ navigation }: any) => {
   });
 
   currentTour.expenses.forEach(expense => {
-    // Credit the payer
-    if (balances[expense.paidBy] !== undefined) {
-      balances[expense.paidBy] += expense.amount;
-    }
+    // Credit the payers
+    Object.entries(expense.paidBy).forEach(([id, amt]) => {
+      if (balances[id] !== undefined) {
+        balances[id] += amt;
+      }
+    });
 
     // Debit the splitters
     if (expense.splitType === 'EQUAL') {

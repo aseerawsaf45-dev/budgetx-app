@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
 import { Button } from '../components/Button';
-import { Trash2, UserPlus } from 'lucide-react-native';
+import { Trash2, UserPlus, ArrowLeft } from 'lucide-react-native';
 
 export const ContributorsScreen = ({ navigation }: any) => {
   const { tours, currentTourId, addContributor, removeContributor } = useStore();
@@ -27,7 +27,14 @@ export const ContributorsScreen = ({ navigation }: any) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Manage Contributors</Text>
+      <View style={styles.header}>
+        {navigation.canGoBack() && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <ArrowLeft color={COLORS.text} size={24} />
+          </TouchableOpacity>
+        )}
+        <Text style={styles.title}>Manage Contributors</Text>
+      </View>
       
       <View style={styles.addSection}>
         <TextInput
@@ -83,11 +90,18 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING.lg,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  backBtn: {
+    marginRight: SPACING.md,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: SPACING.lg,
   },
   addSection: {
     flexDirection: 'row',

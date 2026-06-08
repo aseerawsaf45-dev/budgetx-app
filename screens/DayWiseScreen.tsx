@@ -52,7 +52,7 @@ export const DayWiseScreen = ({ navigation }: any) => {
                 <View>
                   <Text style={styles.expenseTitle}>{expense.title}</Text>
                   <Text style={styles.expenseCategory}>
-                    {expense.category} • Paid by {currentTour.contributors.find(c => c.id === expense.paidBy)?.name || 'Unknown'}
+                    {expense.category} • Paid by {Object.keys(expense.paidBy).map(id => currentTour.contributors.find(c => c.id === id)?.name).filter(Boolean).join(', ')}
                   </Text>
                 </View>
                 <Text style={styles.expenseAmount}>{formatCurrency(expense.amount)}</Text>
