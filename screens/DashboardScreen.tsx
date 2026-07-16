@@ -39,8 +39,24 @@ export const DashboardScreen = ({ navigation }: any) => {
   }
 
   const totalExpense = currentTour.expenses.reduce((sum, e) => sum + e.amount, 0);
-  const remainingBudget = currentTour.totalBudget - totalExpense;
   const costPerPerson = currentTour.estimatedParticipants > 0 ? totalExpense / currentTour.estimatedParticipants : 0;
+
+  // Calculate individual costs for each participant
+  const overallCosts: Record<string, number> = {};
+  currentTour.contributors.forEach(c => {
+    overallCosts[c.id] = 0;
+  });
+
+  currentTour.expenses.forEach(expense => {
+    if (expense.splitAmong.length > 0) {
+      const splitAmount = expense.amount / expense.splitAmong.length;
+      expense.splitAmong.forEach(id => {
+        if (overallCosts[id] !== undefined) {
+          overallCosts[id] += splitAmount;
+        }
+      });
+    }
+  });
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -86,33 +102,40 @@ export const DashboardScreen = ({ navigation }: any) => {
         </ScrollView>
       )}
       
-      <LinearGradient
-        colors={[COLORS.surfaceLight, COLORS.surface]}
-        style={styles.card}
-      >
-        <Text style={styles.cardLabel}>Total Budget</Text>
-        <Text style={styles.cardValue}>{formatCurrency(currentTour.totalBudget)}</Text>
-      </LinearGradient>
-
       <View style={styles.row}>
-        <LinearGradient colors={[COLORS.surfaceLight, COLORS.surface]} style={[styles.card, styles.halfCard]}>
-          <Text style={styles.cardLabel}>Total Expenses</Text>
-          <Text style={[styles.cardValue, { color: COLORS.danger }]}>{formatCurrency(totalExpense)}</Text>
+        <LinearGradient
+          colors={[COLORS.surfaceLight, COLORS.surface]}
+          style={[styles.card, { flex: 1 }]}
+        >
+          <Text style={styles.cardLabel}>Total Budget</Text>
+          <Text style={styles.cardValue}>{formatCurrency(currentTour.totalBudget)}</Text>
         </LinearGradient>
 
-        <LinearGradient colors={[COLORS.surfaceLight, COLORS.surface]} style={[styles.card, styles.halfCard]}>
-          <Text style={styles.cardLabel}>Remaining</Text>
-          <Text style={[styles.cardValue, { color: remainingBudget >= 0 ? COLORS.success : COLORS.danger }]}>
-            {formatCurrency(remainingBudget)}
-          </Text>
+        <LinearGradient colors={[COLORS.surfaceLight, COLORS.surface]} style={[styles.card, { flex: 1 }]}>
+          <Text style={styles.cardLabel}>Total Expenses</Text>
+          <Text style={[styles.cardValue, { color: COLORS.danger }]}>{formatCurrency(totalExpense)}</Text>
         </LinearGradient>
       </View>
 
       <LinearGradient colors={[COLORS.surfaceLight, COLORS.surface]} style={styles.card}>
-        <Text style={styles.cardLabel}>Cost Per Person</Text>
+        <Text style={styles.cardLabel}>Cost Per Person (Est.)</Text>
         <Text style={styles.cardValue}>{formatCurrency(costPerPerson)}</Text>
         <Text style={styles.cardSubValue}>Based on {currentTour.estimatedParticipants} participants</Text>
       </LinearGradient>
+
+      {currentTour.contributors.length > 0 && (
+        <>
+          <Text style={styles.sectionHeader}>Participant Shares</Text>
+          <View style={styles.shareCard}>
+            {currentTour.contributors.map(c => (
+              <View key={c.id} style={styles.shareItem}>
+                <Text style={styles.shareName}>{c.name}</Text>
+                <Text style={styles.shareCost}>{formatCurrency(overallCosts[c.id] || 0)}</Text>
+              </View>
+            ))}
+          </View>
+        </>
+      )}
       
       <View style={{ gap: SPACING.md, marginTop: SPACING.lg }}>
         <Button 
@@ -211,5 +234,42 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     textAlign: 'center',
     marginBottom: SPACING.xl,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  shareCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  shareItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  shareName: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: '500',
+  },
+  shareCost: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.text,
   },
 });

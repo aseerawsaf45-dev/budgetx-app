@@ -18,8 +18,9 @@ export const AddExpenseScreen = ({ navigation }: any) => {
   const [paidBy, setPaidBy] = useState<Record<string, string>>({});
   const [day, setDay] = useState('1');
   const [category, setCategory] = useState<Expense['category']>('Food');
+  const [paymentType, setPaymentType] = useState<Expense['paymentType']>('EXACT');
+  const [paymentValues, setPaymentValues] = useState<Record<string, string>>({});
   
-
   // By default, split equal among all
   const [splitAmong, setSplitAmong] = useState<string[]>(
     currentTour?.contributors.map(c => c.id) || []
@@ -36,23 +37,54 @@ export const AddExpenseScreen = ({ navigation }: any) => {
   const handleSave = () => {
     const parsedAmount = parseFloat(amount) || 0;
     const parsedPaidBy: Record<string, number> = {};
-    let sumPaid = 0;
-    
-    Object.entries(paidBy).forEach(([id, val]) => {
-      const num = parseFloat(val);
-      if (num > 0) {
-        parsedPaidBy[id] = num;
-        sumPaid += num;
-      }
-    });
+    const parsedPaymentValues: Record<string, number> = {};
+    let sumPaymentValues = 0;
 
-    if (!title || parsedAmount <= 0 || Object.keys(parsedPaidBy).length === 0 || splitAmong.length === 0) {
-      alert('Please fill out all fields and ensure contributors are added to the tour.');
+    if (!title || parsedAmount <= 0) {
+      alert('Please fill out all required fields.');
       return;
     }
 
-    if (Math.abs(sumPaid - parsedAmount) > 0.01) {
-      alert('The sum of individual payments must equal the total amount.');
+    // Parse the values entered in "Paid By" depending on type
+    Object.entries(paymentValues).forEach(([id, val]) => {
+      const num = parseFloat(val);
+      if (num > 0) {
+        parsedPaymentValues[id] = num;
+        sumPaymentValues += num;
+      }
+    });
+
+    if (Object.keys(parsedPaymentValues).length === 0) {
+      alert('Please specify who paid for the expense.');
+      return;
+    }
+
+    if (paymentType === 'EXACT') {
+      if (Math.abs(sumPaymentValues - parsedAmount) > 0.01) {
+        alert('The sum of individual payments must equal the total amount.');
+        return;
+      }
+      Object.assign(parsedPaidBy, parsedPaymentValues);
+    } else if (paymentType === 'PERCENTAGE') {
+      if (Math.abs(sumPaymentValues - 100) > 0.01) {
+        alert('The sum of percentages must equal 100%.');
+        return;
+      }
+      Object.entries(parsedPaymentValues).forEach(([id, val]) => {
+        parsedPaidBy[id] = (parsedAmount * val) / 100;
+      });
+    } else if (paymentType === 'SHARES') {
+      if (sumPaymentValues <= 0) {
+        alert('Total shares must be greater than zero.');
+        return;
+      }
+      Object.entries(parsedPaymentValues).forEach(([id, val]) => {
+        parsedPaidBy[id] = (parsedAmount * val) / sumPaymentValues;
+      });
+    }
+
+    if (splitAmong.length === 0) {
+      alert('Please select at least one person to split among.');
       return;
     }
 
@@ -66,7 +98,9 @@ export const AddExpenseScreen = ({ navigation }: any) => {
       category,
       paidBy: parsedPaidBy,
       splitAmong,
-      splitType: 'EQUAL'
+      splitType: 'EQUAL',
+      paymentType,
+      paymentValues: parsedPaymentValues
     });
 
     navigation.goBack();
@@ -98,87 +132,111 @@ export const AddExpenseScreen = ({ navigation }: any) => {
         </View>
       )}
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Expense Title</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Bus Tickets"
-          placeholderTextColor={COLORS.textMuted}
-          value={title}
-          onChangeText={setTitle}
-        />
+      <View style={styles.formCard}>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Expense Title</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Bus Tickets"
+            placeholderTextColor={COLORS.textMuted}
+            value={title}
+            onChangeText={setTitle}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Expense Details / Description</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Bus from Dhaka to Sylhet"
+            placeholderTextColor={COLORS.textMuted}
+            value={details}
+            onChangeText={setDetails}
+            multiline
+          />
+        </View>
+
+        <View style={{ flexDirection: 'row', gap: SPACING.md }}>
+          <View style={[styles.inputContainer, { flex: 2 }]}>
+            <Text style={styles.label}>Total Amount (৳)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="0"
+              placeholderTextColor={COLORS.textMuted}
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={setAmount}
+            />
+          </View>
+
+          <View style={[styles.inputContainer, { flex: 1 }]}>
+            <Text style={styles.label}>Day (1 to {currentTour.days})</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="1"
+              placeholderTextColor={COLORS.textMuted}
+              keyboardType="numeric"
+              value={day}
+              onChangeText={setDay}
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Category</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillContainer}>
+            {CATEGORIES.map(cat => (
+              <TouchableOpacity 
+                key={cat} 
+                style={[styles.pill, category === cat && styles.pillActive]}
+                onPress={() => setCategory(cat)}
+              >
+                <Text style={[styles.pillText, category === cat && styles.pillTextActive]}>{cat}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Expense Details / Description</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Bus from Dhaka to Sylhet"
-          placeholderTextColor={COLORS.textMuted}
-          value={details}
-          onChangeText={setDetails}
-          multiline
-        />
-      </View>
+      <Text style={styles.sectionHeader}>Paid By</Text>
+      <View style={styles.formCard}>
+        <View style={[styles.inputContainer, { marginBottom: SPACING.md }]}>
+          <Text style={styles.label}>Payment Option</Text>
+          <View style={styles.pillContainer}>
+            {(['EXACT', 'PERCENTAGE', 'SHARES'] as const).map(type => (
+              <TouchableOpacity 
+                key={type} 
+                style={[styles.pill, paymentType === type && styles.pillActive]}
+                onPress={() => {
+                  setPaymentType(type);
+                  setPaymentValues({});
+                }}
+              >
+                <Text style={[styles.pillText, paymentType === type && styles.pillTextActive]}>
+                  {type === 'EXACT' ? 'Exact (৳)' : type === 'PERCENTAGE' ? 'Percentage (%)' : 'Shares'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Total Amount (৳)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="0"
-          placeholderTextColor={COLORS.textMuted}
-          keyboardType="numeric"
-          value={amount}
-          onChangeText={setAmount}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Day (1 to {currentTour.days})</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="1"
-          placeholderTextColor={COLORS.textMuted}
-          keyboardType="numeric"
-          value={day}
-          onChangeText={setDay}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Category</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillContainer}>
-          {CATEGORIES.map(cat => (
-            <TouchableOpacity 
-              key={cat} 
-              style={[styles.pill, category === cat && styles.pillActive]}
-              onPress={() => setCategory(cat)}
-            >
-              <Text style={[styles.pillText, category === cat && styles.pillTextActive]}>{cat}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Paid By</Text>
         {currentTour.contributors.map(c => (
           <View key={c.id} style={{flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm}}>
             <Text style={{flex: 1, color: COLORS.text, fontSize: 16}}>{c.name}</Text>
             <TextInput
               style={[styles.input, {flex: 1, paddingVertical: SPACING.sm}]}
-              placeholder="0"
+              placeholder={paymentType === 'EXACT' ? "৳ 0" : paymentType === 'PERCENTAGE' ? "0%" : "0 shares"}
               placeholderTextColor={COLORS.textMuted}
               keyboardType="numeric"
-              value={paidBy[c.id] || ''}
-              onChangeText={(val) => setPaidBy(prev => ({...prev, [c.id]: val}))}
+              value={paymentValues[c.id] || ''}
+              onChangeText={(val) => setPaymentValues(prev => ({...prev, [c.id]: val}))}
             />
           </View>
         ))}
       </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Split Equally Among</Text>
+      <Text style={styles.sectionHeader}>Split Equally Among</Text>
+      <View style={styles.formCard}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillContainer}>
           {currentTour.contributors.map(c => (
             <TouchableOpacity 
@@ -283,5 +341,24 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: COLORS.text,
     fontSize: 18,
+  },
+  formCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: SPACING.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: SPACING.md,
   },
 });
