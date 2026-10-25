@@ -17,8 +17,10 @@ export interface Expense {
   category: 'Transport' | 'Hotel' | 'Food' | 'Snacks' | 'Tickets' | 'Guide' | 'Emergency' | 'Miscellaneous';
   paidBy: Record<string, number>; // Contributor ID -> Amount Paid
   splitAmong: string[]; // Contributor IDs
-  splitType: 'EQUAL';
-  paymentType?: 'EXACT' | 'PERCENTAGE' | 'SHARES';
+  splitType: 'EQUAL' | 'GIVING_SHARES' | 'EXACT';
+  splitValues?: Record<string, number>; // Contributor ID -> Share Cost
+  givingShares?: Record<string, string[]>; // Payer ID -> array of Contributor IDs whose share they are giving
+  paymentType?: 'FULL' | 'EXACT' | 'PERCENTAGE' | 'SHARES';
   paymentValues?: Record<string, number>;
 }
 

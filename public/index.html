@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <title>BudgetX</title>
+    <meta name="description" content="Offline-first group tour budget, expense splitter, and settlement manager" />
+    <meta name="theme-color" content="#0A0D14" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BudgetX" />
+
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+
+    <!-- The `react-native-web` recommended style reset -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+        background-color: #0A0D14;
+      }
+      body {
+        overflow: hidden;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="root"></div>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(reg) {
+              console.log('[BudgetX PWA] ServiceWorker registered with scope:', reg.scope);
+            })
+            .catch(function(err) {
+              console.warn('[BudgetX PWA] ServiceWorker registration failed:', err);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

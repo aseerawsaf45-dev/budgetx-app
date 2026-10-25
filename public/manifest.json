@@ -1,0 +1,25 @@
+{
+  "name": "BudgetX - Tour Budget & Expense Manager",
+  "short_name": "BudgetX",
+  "description": "Offline-first group tour budget, expense splitter, and settlement manager",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0D14",
+  "theme_color": "#0A0D14",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "48x48 72x72 96x96 144x144",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["finance", "travel", "productivity"]
+}
