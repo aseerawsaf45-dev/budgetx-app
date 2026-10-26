@@ -13,6 +13,7 @@ import {
   Outfit_600SemiBold,
   Outfit_700Bold,
 } from '@expo-google-fonts/outfit';
+import { Analytics } from '@vercel/analytics/react';
 
 const linking: LinkingOptions<any> = {
   prefixes: [
@@ -174,6 +175,7 @@ export default function App() {
         >
           <AppNavigator />
         </NavigationContainer>
+        {Platform.OS === 'web' && <Analytics />}
       </SafeAreaView>
     </SafeAreaProvider>
   );
